@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101a3b">
+  <title>Little Rocket · Tap & explore</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: #101a3b; color: #fff4df; overflow: hidden; user-select: none; }
+    button { font: inherit; cursor: pointer; color: inherit; touch-action: manipulation; }
+    button:focus-visible { outline: 4px solid #fff0ad; outline-offset: 7px; }
+    .universe { position: relative; height: 100vh; height: 100svh; min-height: 420px; overflow: hidden; isolation: isolate; background: radial-gradient(ellipse at 50% 110%, #34476a 0, transparent 54%), radial-gradient(ellipse at 80% 15%, #25264c 0, transparent 55%), #101a3b; }
+    .universe::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .14; z-index: -1; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.3' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+    header { position: absolute; z-index: 5; inset: max(25px, env(safe-area-inset-top)) 5% auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 800; letter-spacing: -.5px; }
+    .brand svg { width: 34px; height: 34px; }
+    .controls { display: flex; gap: 10px; }
+    .control { display: grid; place-items: center; min-width: 48px; height: 48px; border: 1px solid #ffffff24; border-radius: 50%; background: #ffffff09; }
+    .control:hover { background: #ffffff18; }
+    .control[hidden] { display: none; }
+    .control svg { width: 21px; height: 21px; }
+    .intro { position: absolute; top: 13%; width: 100%; text-align: center; pointer-events: none; }
+    .eyebrow { color: #c2c8e3; text-transform: uppercase; letter-spacing: 4px; font-size: 11px; font-weight: 700; }
+    h1 { margin: 12px 0 9px; font-size: clamp(30px, 4.5vw, 60px); font-weight: 800; letter-spacing: -2px; }
+    .intro p { margin: 0; color: #bfc9e6; font-size: clamp(14px, 1.5vw, 18px); }
+    .star { position: absolute; border-radius: 50%; background: #fff2c9; opacity: .5; pointer-events: none; }
+    .star.cross { background: none; color: #ffe3a2; font-size: 19px; }
+    .orbit { position: absolute; width: 77%; height: 56%; left: 12%; top: 33%; border: 1px dashed #c3cdf01a; border-radius: 50%; transform: rotate(-12deg); pointer-events: none; }
+    .planet { position: absolute; z-index: 2; border: 0; background: none; padding: 0; width: clamp(130px, 19vw, 258px); height: clamp(140px, 20vw, 270px); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); }
+    .planet svg { width: 100%; height: 83%; overflow: visible; filter: drop-shadow(0 16px 25px #00000020); transition: transform .3s ease; }
+    .planet:hover svg { transform: translateY(-5px) rotate(-3deg); }
+    .planet:active svg { transform: scale(.94); }
+    .planet .name { margin-top: 3px; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; font-weight: bold; }
+    .planet .dot { display: inline-block; width: 5px; height: 5px; margin: 0 8px 2px 0; background: currentColor; border-radius: 50%; }
+    .earth { left: 19%; top: 49%; color: #a8e5ca; }
+    .mars { left: 40%; top: 71%; color: #ffb99b; }
+    .saturn { left: 65%; top: 47%; color: #ffe0a0; width: clamp(150px, 24vw, 330px); }
+    .neptune { left: 84%; top: 72%; color: #b6dfe4; }
+    .rocket { position: absolute; left: 49%; top: 43%; width: clamp(64px, 8vw, 105px); height: clamp(85px, 11vw, 140px); z-index: 4; padding: 0; border: 0; background: none; transform: translate(-50%, -50%) rotate(18deg); will-change: left, top, transform; }
+    .rocket svg { width: 100%; height: 100%; overflow: visible; }
+    .flame { transform-origin: 50px 102px; animation: flicker .7s ease-in-out infinite alternate; }
+    @keyframes flicker { to { transform: scaleY(.73); } }
+    .spark { position: absolute; pointer-events: none; z-index: 3; font-size: 24px; animation: celebrate 1.8s ease-out forwards; }
+    @keyframes celebrate { from { opacity: 1; transform: translate(-50%, -50%) scale(.5); } to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2) rotate(35deg); } }
+    .greeting { position: absolute; z-index: 5; left: 50%; bottom: 6%; transform: translateX(-50%); text-align: center; width: 90%; font-size: clamp(18px, 2vw, 25px); color: #ffe8b8; pointer-events: none; }
+    .hint { position: absolute; left: 5%; bottom: 25px; color: #aebbd2; font-size: 11px; letter-spacing: .6px; }
+    .footer-star { position: absolute; right: 5%; bottom: 23px; color: #cfc4a0; font-size: 14px; }
+    .cockpit { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; overflow: hidden; color: #fff4df; background: #111b35; }
+    .cockpit::backdrop { background: #111b35; }
+    .cockpit[open] { display: flex; flex-direction: column; }
+    .pilot-header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: max(16px, env(safe-area-inset-top)) 4% 14px; }
+    .pilot-button { min-height: 54px; padding: 12px 22px; border: 1px solid #ffffff35; border-radius: 22px; background: #2e405e; font-weight: bold; }
+    .pilot-button:hover { background: #3c5377; }
+    .pilot-title { margin: 0; font-size: clamp(16px, 2.4vw, 25px); text-align: center; }
+    .pilot-heading { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .pilot-audio { display: grid; justify-items: center; }
+    .volume-control { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #c3d7e9; }
+    .volume-control input { width: 88px; height: 30px; margin: 0; accent-color: #ffe0a1; cursor: pointer; }
+    .windscreen { position: relative; flex: 1; min-height: 0; margin: 0 3%; border: clamp(8px, 1.5vw, 20px) solid #536881; border-bottom-width: 12px; border-radius: 44% 44% 18% 18% / 19% 19% 12% 12%; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #293759, #080f25 72%); box-shadow: 0 0 0 5px #273b54, inset 0 0 60px #070d24; }
+    .windscreen::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 10px 0 #a1c9df18, inset 0 0 50px #9ecbe80b; pointer-events: none; }
+    #pilot-stars { position: absolute; width: 100%; height: 100%; inset: 0; }
+    .destination { position: absolute; left: 50%; top: 46%; width: min(64vw, 440px, 65vh); transform: translate(-50%, -50%) scale(.14); will-change: transform; }
+    .destination svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 30px #d4e5ff20); }
+    .pilot-status { position: absolute; bottom: 5%; left: 5%; width: 90%; margin: 0; text-align: center; font-size: clamp(17px, 2.3vw, 27px); text-shadow: 0 2px 10px #000; }
+    .dashboard { position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: clamp(15px, 4vw, 65px); min-height: 150px; padding: 18px 5% max(20px, env(safe-area-inset-bottom)); background: linear-gradient(#293d57, #172740); border-top: 6px solid #6d8298; border-radius: 25% 25% 0 0 / 15% 15% 0 0; margin-top: -5px; }
+    .pilot-display { width: min(42vw, 260px); text-align: center; }
+    .pilot-display small { display: block; color: #c3d7e9; font-size: 10px; letter-spacing: 2px; margin-bottom: 9px; }
+    .pilot-route { padding: 12px; background: #102739; border: 2px solid #536c80; border-radius: 15px; color: #c3efd7; }
+    .pilot-route strong { font-size: clamp(18px, 3vw, 26px); }
+    .journey-track { height: 7px; background: #ffffff16; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+    .journey-track span { display: block; height: 100%; width: 0; background: #b5e6ce; border-radius: inherit; }
+    .yoke { width: clamp(80px, 18vw, 175px); height: 110px; }
+    .pilot-replay { margin-top: 10px; background: #f0c891; color: #302b3b; min-height: 50px; width: 100%; }
+    .pilot-replay:hover { background: #ffdfaf; }
+    .pilot-replay[hidden] { display: none; }
+    .destinations { flex: 0 0 auto; display: flex; justify-content: center; gap: 12px; padding: 10px 4%; background: #172740; }
+    .destination-choice { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(21vw, 180px); min-height: 78px; padding: 3px 10px; background: #263b55; border: 2px solid #ffffff18; border-radius: 20px; font-weight: bold; font-size: 15px; }
+    .destination-choice svg { width: 70px; height: 65px; flex-shrink: 0; }
+    .destination-choice:hover { background: #3a506c; }
+    .destination-choice[aria-pressed="true"] { border-color: #ffe0a1; background: #41516a; }
+    .surface { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; background: none; opacity: 0; visibility: hidden; transition: opacity .9s ease; }
+    .surface:focus-visible { outline-offset: -8px; }
+    .surface svg { display: block; width: 100%; height: 100%; }
+    .landed .surface { opacity: 1; visibility: visible; }
+    .landed #pilot-stars, .landed .destination { visibility: hidden; }
+    .landed .pilot-status { left: 8%; width: 84%; bottom: 5%; padding: 8px 12px; background: #142337c9; border-radius: 18px; font-size: clamp(15px, 2vw, 24px); }
+    .space-view { position: absolute; inset: 0; }
+    .space-view[hidden], .view-toggle[hidden] { display: none; }
+    .space-view.revealing { animation: turn-to-space 1.2s ease-out; }
+    @keyframes turn-to-space { from { opacity: 0; transform: translateY(-12%); } to { opacity: 1; transform: translateY(0); } }
+    .planet-horizon { position: absolute; left: -10%; bottom: -19%; width: 120%; height: 45%; border-radius: 50% 50% 0 0; border-top: 3px solid var(--rim); background: var(--ground); box-shadow: 0 -12px 45px var(--glow); pointer-events: none; }
+    .sky-planets { position: absolute; inset: 3% 5% 25%; display: flex; align-items: center; justify-content: space-around; gap: 8px; }
+    .sky-planet { width: 29%; max-width: 210px; min-width: 44px; min-height: 60px; padding: 6px; border: 0; border-radius: 24px; background: transparent; display: flex; flex-direction: column; align-items: center; color: #fff4df; font-weight: bold; font-size: clamp(12px, 1.8vw, 19px); text-shadow: 0 2px 6px #000; }
+    .sky-planet:nth-child(2) { align-self: flex-start; margin-top: 2%; }
+    .sky-planet svg { width: 48%; max-height: 12vh; filter: drop-shadow(0 0 8px #d4e5ff20); }
+    .sky-planet span { font-size: clamp(11px, 1.3vw, 15px); }
+    .sky-planet:hover { background: #ffffff12; }
+    .view-toggle { flex-shrink: 0; min-height: 44px; padding: 8px 14px; border-radius: 18px; font-size: 13px; }
+    .landed .pilot-status { bottom: 5%; pointer-events: none; }
+    .outward #pilot-stars { visibility: visible; }
+    .outward .surface { opacity: 0; visibility: hidden; }
+    .outward .pilot-status { bottom: 8%; background: transparent; }
+    @media (max-height: 530px) { .sky-planets { inset: 0 5% 25%; } .sky-planet svg { max-height: min(10vh, 36px); } .sky-planet { padding: 0; } .sky-planet:nth-child(2) { align-self: center; margin-top: 0; } .landed .pilot-status { bottom: 3%; font-size: 14px; margin: 0; padding: 3px; } .view-toggle { font-size: 12px; } }
+    @media (prefers-reduced-motion: reduce) { .space-view.revealing { animation: none; } }
+    @media (max-width: 600px) { .destinations { gap: 6px; padding: 8px 3%; } .destination-choice { flex: 1; width: auto; min-width: 0; min-height: 80px; flex-direction: column; gap: 0; padding: 2px; border-radius: 16px; font-size: 12px; } .destination-choice svg { width: 62px; height: 51px; } }
+    @media (max-height: 530px) and (min-width: 601px) { .destinations { padding: 5px 4%; gap: 10px; } .destination-choice { min-height: 58px; } .destination-choice svg { width: 55px; height: 45px; } .destination { width: min(32vw, 230px, 46vh); } }
+    @media (prefers-reduced-motion: reduce) { .surface { transition: none; } }
+    @media (max-width: 600px) { .pilot-header { flex-wrap: wrap; padding: max(12px, env(safe-area-inset-top)) 4% 12px; } .pilot-title { order: 3; width: 100%; } .pilot-button { padding: 10px 16px; } .windscreen { border-radius: 42% 42% 12% 12% / 12% 12% 8% 8%; } .dashboard { gap: 12px; min-height: 150px; } .pilot-display { width: 48vw; } .yoke { width: 27vw; } }
+    @media (max-height: 530px) and (min-width: 601px) { .pilot-header { padding: 8px 4%; } .pilot-button { min-height: 48px; padding: 8px 16px; } .dashboard { min-height: 85px; padding: 8px 5%; gap: 25px; } .yoke { height: 60px; width: 100px; } .pilot-display { width: 300px; display: flex; align-items: center; gap: 12px; } .pilot-display small { display: none; } .pilot-route { flex: 1; padding: 7px 16px; } .pilot-route strong { font-size: 18px; } .pilot-replay { margin: 0; width: auto; } .pilot-status { bottom: 3%; font-size: 17px; } }
+    @media (max-width: 600px) { header { top: max(16px, env(safe-area-inset-top)); } .brand { font-size: 16px; } .intro { top: 13%; } h1 { letter-spacing: -1px; } .eyebrow { font-size: 9px; letter-spacing: 3px; } .earth { left: 25%; top: 40%; } .saturn { left: 75%; top: 42%; } .mars { left: 25%; top: 69%; } .neptune { left: 75%; top: 70%; } .planet { width: clamp(136px, 36vw, 200px); height: clamp(148px, 39vw, 215px); } .saturn { width: 45vw; } .rocket { top: 53%; } .planet .name { font-size: 10px; } .greeting { bottom: 10%; font-size: 19px; } .hint { bottom: 20px; font-size: 10px; } }
+    @media (max-height: 530px) and (min-width: 601px) { .universe { min-height: 320px; } header { top: 12px; } .intro { top: 11%; } .eyebrow { display: none; } h1 { font-size: 30px; margin: 0 0 5px; } .planet { width: 145px; height: 152px; } .saturn { width: 195px; } .earth { top: 47%; } .mars { top: 67%; } .saturn { top: 47%; } .neptune { top: 67%; } .greeting { bottom: 5%; font-size: 18px; } .hint, .footer-star { bottom: 12px; } }
+    @media (max-height: 530px) and (min-width: 601px) { .planet { width: min(17vw, 145px); } .saturn { width: min(20vw, 170px); } }
+    @media (max-height: 700px) and (max-width: 600px) { .dashboard { min-height: 100px; padding-top: 8px; padding-bottom: 10px; } .yoke { height: 75px; } .pilot-display small { display: none; } .pilot-route { padding: 7px; } .pilot-replay { margin-top: 5px; min-height: 44px; padding: 6px 10px; } }
+    @media (prefers-reduced-motion: reduce) { .flame { animation: none; } .planet svg { transition: none; } .spark { animation-duration: .4s; } }
+    @media (max-width: 600px) { .pilot-heading { order: 3; width: 100%; gap: 8px; } .pilot-heading .pilot-title { order: initial; width: auto; font-size: 16px; } .view-toggle { padding: 8px 10px; font-size: 12px; } }
+    @media (max-width: 360px) and (max-height: 650px) { .sky-planets { bottom: 35%; } .landed .pilot-status { font-size: 14px; padding: 4px; } }
+  </style>
+</head>
+<body>
+  <main class="universe" id="universe" aria-label="Little Rocket space game">
+    <header>
+      <div class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l4.5 11 12 1-9 8 3 12-10.5-6.5L9.5 35l3-12-9-8 12-1z" fill="#f9d795"/><circle cx="17" cy="19" r="1.3" fill="#634c39"/><circle cx="23" cy="19" r="1.3" fill="#634c39"/></svg>little rocket</div>
+      <div class="controls">
+        <button class="control" id="sound" aria-label="Turn sound off" aria-pressed="true" title="Sound on / off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path id="sound-mark" d="M15 8q5 4 0 8M18 5q7 7 0 14"/></svg></button>
+        <button class="control" id="fullscreen" aria-label="Enter full screen" title="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+      </div>
+    </header>
+    <div class="intro"><div class="eyebrow">A little adventure in space</div><h1>Where shall we fly?</h1><p>Tap a planet. You're the pilot!</p></div>
+    <div class="orbit" aria-hidden="true"></div>
+    <button class="planet earth" data-planet="Earth" aria-label="Fly to Earth">
+      <svg viewBox="0 0 220 190" aria-hidden="true"><defs><clipPath id="earth-clip"><circle cx="110" cy="94" r="73"/></clipPath><radialGradient id="earth-fill" cx="30%" cy="25%"><stop stop-color="#69b5d1"/><stop offset="1" stop-color="#347fab"/></radialGradient></defs><circle cx="110" cy="94" r="84" fill="#99e3dc" opacity=".05"/><circle cx="110" cy="94" r="73" fill="url(#earth-fill)"/><g clip-path="url(#earth-clip)" fill="#8cb16d"><path d="M36 64l25-33 32-6 9 18-12 17 13 18-15 20-20-5-9 14-23-15zM123 20l38 8 22 40-29 1-17-16-22-11zM119 108l22-16 24 9 26 35-37 32-19-13-3-25z"/><path d="M62 121l23-5 16 13-8 31-14 7-9-22z"/></g><g clip-path="url(#earth-clip)" fill="none" stroke="#f3faf8" stroke-width="6" stroke-linecap="round" opacity=".8"><path d="M48 72q19-9 34-4M124 52q21-5 39 7M112 143q23 9 43-2M92 24q20-5 37 1"/></g><path d="M65 51q18-19 34-19" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".25" fill="none"/><g fill="#284851"><ellipse cx="92" cy="92" rx="4" ry="5.5"/><ellipse cx="128" cy="92" rx="4" ry="5.5"/></g><path d="M100 107q10 10 20 0" fill="none" stroke="#284851" stroke-width="3.5" stroke-linecap="round"/><g fill="#f6bdb6" opacity=".65"><ellipse cx="79" cy="104" rx="8" ry="4"/><ellipse cx="141" cy="104" rx="8" ry="4"/></g></svg>
+      <span class="name"><span class="dot"></span>Earth</span>
+    </button>
+    <button class="planet mars" data-planet="Mars" aria-label="Fly to Mars">
+      <svg viewBox="0 0 220 190" aria-hidden="true"><defs><radialGradient id="mars-fill" cx="30%" cy="20%"><stop stop-color="#df9c70"/><stop offset="1" stop-color="#ba6949"/></radialGradient></defs><circle cx="110" cy="94" r="71" fill="url(#mars-fill)"/><g fill="#bd6e59" opacity=".23"><ellipse cx="79" cy="58" rx="16" ry="11" transform="rotate(-25 79 58)"/><ellipse cx="148" cy="125" rx="18" ry="12"/><circle cx="64" cy="116" r="8"/><circle cx="140" cy="54" r="6"/></g><path d="M66 48q14-12 31-15" stroke="#ffe0c8" stroke-width="7" stroke-linecap="round" opacity=".5" fill="none"/><g fill="#6b423d"><ellipse cx="94" cy="90" rx="4" ry="5.5"/><ellipse cx="126" cy="90" rx="4" ry="5.5"/></g><path d="M101 104q9 10 18 0" fill="none" stroke="#6b423d" stroke-width="3.5" stroke-linecap="round"/><g fill="#fbd0ab" opacity=".6"><ellipse cx="80" cy="101" rx="8" ry="4"/><ellipse cx="140" cy="101" rx="8" ry="4"/></g></svg>
+      <span class="name"><span class="dot"></span>Mars</span>
+    </button>
+    <button class="planet saturn" data-planet="Saturn" aria-label="Fly to Saturn">
+      <svg viewBox="0 0 290 190" aria-hidden="true"><defs><clipPath id="saturn-clip"><circle cx="145" cy="92" r="62"/></clipPath><radialGradient id="saturn-fill" cx="30%" cy="20%"><stop stop-color="#f0dfb4"/><stop offset="1" stop-color="#cdb581"/></radialGradient></defs><ellipse cx="145" cy="100" rx="118" ry="31" transform="rotate(-18 145 100)" fill="none" stroke="#c49b77" stroke-width="18"/><circle cx="145" cy="92" r="62" fill="url(#saturn-fill)"/><g clip-path="url(#saturn-clip)" fill="none" stroke="#af976f" opacity=".3" stroke-width="12"><path d="M78 58q68 24 130-4M79 124q65 26 129-3"/></g><path d="M33 127c17 34 217-17 224-52" fill="none" stroke="#f4d3a3" stroke-width="17" stroke-linecap="round"/><path d="M39 131c49 13 162-12 202-41" fill="none" stroke="#ffe6be" stroke-width="3" opacity=".65" stroke-linecap="round"/><g fill="#6c533b"><ellipse cx="131" cy="80" rx="3.5" ry="5"/><ellipse cx="158" cy="80" rx="3.5" ry="5"/></g><path d="M137 93q8 8 15 0" fill="none" stroke="#6c533b" stroke-width="3" stroke-linecap="round"/><g fill="#e99e83" opacity=".55"><ellipse cx="119" cy="91" rx="7" ry="3.5"/><ellipse cx="171" cy="91" rx="7" ry="3.5"/></g></svg>
+      <span class="name"><span class="dot"></span>Saturn</span>
+    </button>
+    <button class="planet neptune" data-planet="Neptune" aria-label="Fly to Neptune">
+      <svg viewBox="0 0 220 190" aria-hidden="true"><defs><clipPath id="neptune-clip"><circle cx="110" cy="94" r="70"/></clipPath><radialGradient id="neptune-fill" cx="30%" cy="20%"><stop stop-color="#b0d4d4"/><stop offset="1" stop-color="#78aebc"/></radialGradient></defs><circle cx="110" cy="94" r="70" fill="url(#neptune-fill)"/><g clip-path="url(#neptune-clip)" fill="none" stroke="#568a9d" stroke-width="12" opacity=".22"><path d="M40 64q45-22 90-3t58-8M37 128q40-17 91 1t59-1"/></g><path d="M65 49q13-12 30-14" stroke="#e1f1ef" stroke-width="7" stroke-linecap="round" opacity=".5" fill="none"/><g fill="#2e5362"><ellipse cx="94" cy="91" rx="4" ry="5.5"/><ellipse cx="126" cy="91" rx="4" ry="5.5"/></g><path d="M101 106q9 10 18 0" fill="none" stroke="#2e5362" stroke-width="3.5" stroke-linecap="round"/><g fill="#c3dcdd" opacity=".7"><ellipse cx="80" cy="102" rx="8" ry="4"/><ellipse cx="140" cy="102" rx="8" ry="4"/></g></svg>
+      <span class="name"><span class="dot"></span>Neptune</span>
+    </button>
+    <button class="rocket" id="rocket" aria-label="Hop inside the rocket" title="Tap to be the pilot"><svg aria-hidden="true" viewBox="0 0 100 140"><g class="flame"><path d="M38 98q-1 25 12 38 14-15 12-38" fill="#efb56e"/><path d="M44 99q-1 18 6 25 7-8 6-25" fill="#ffe5a3"/></g><path d="M31 65Q10 77 15 104l22-10M69 65q21 12 16 39L63 94" fill="#e89580"/><path d="M33 96C22 65 31 28 50 11c19 17 28 54 17 85z" fill="#fff2db"/><path d="M50 11c9 8 16 21 20 34H30c4-13 11-26 20-34" fill="#ec9c86"/><path d="M61 47q10 27 0 49h6q9-22 3-49" fill="#ded6c9"/><circle cx="50" cy="64" r="15" fill="#dfb883"/><circle cx="50" cy="64" r="10.5" fill="#719bad"/><path d="M45 59q3-4 7-3" stroke="#d6eff0" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M34 96h32v7H34z" fill="#b3bbc4" rx="3"/><path d="M50 82v25" stroke="#e89580" stroke-width="8" stroke-linecap="round"/></svg></button>
+    <div class="greeting" id="greeting" role="status" aria-live="polite">Hello, little explorer ✦</div>
+    <div class="hint">Made for little hands & big imaginations</div><div class="footer-star" aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</div>
+  </main>
+  <dialog class="cockpit" id="cockpit" aria-labelledby="pilot-title">
+    <div class="pilot-header">
+      <button class="pilot-button" id="leave-cockpit" autofocus>← Planets</button>
+      <div class="pilot-heading"><h2 class="pilot-title" id="pilot-title">You're the astronaut!</h2><button class="pilot-button view-toggle" id="view-toggle" hidden>Look into space ↑</button></div>
+      <div class="pilot-audio"><button class="pilot-button" id="pilot-sound" aria-label="Turn cockpit sound off" aria-pressed="true">♪ Sound on</button><label class="volume-control" for="volume">Volume <input id="volume" type="range" min="0" max="100" value="90" aria-label="Rocket sound volume"></label></div>
+    </div>
+    <div class="windscreen" id="windscreen">
+      <canvas id="pilot-stars" aria-hidden="true"></canvas>
+      <div class="destination" id="destination" aria-hidden="true"></div>
+      <button type="button" class="surface" id="surface" aria-label="" aria-hidden="true" disabled></button>
+      <div class="space-view" id="space-view" hidden>
+        <div class="planet-horizon" id="planet-horizon" aria-hidden="true"></div>
+        <nav class="sky-planets" id="sky-planets" aria-label="Fly to another planet"></nav>
+      </div>
+      <p class="pilot-status" id="pilot-status" role="status" aria-live="polite"></p>
+    </div>
+    <nav class="destinations" id="destinations" aria-label="Choose a planet at any time"></nav>
+    <div class="dashboard">
+      <svg class="yoke" viewBox="0 0 180 120" aria-hidden="true"><path d="M90 107V68M90 79C31 79 22 55 27 23M90 79c59 0 68-24 63-56" fill="none" stroke="#101e33" stroke-width="23" stroke-linecap="round"/><path d="M90 104V68M90 75C35 75 27 53 31 24M90 75c55 0 63-22 59-51" fill="none" stroke="#9cafbf" stroke-width="14" stroke-linecap="round"/><rect x="15" y="15" width="27" height="43" rx="12" fill="#f2d7b6" transform="rotate(-10 28 36)"/><rect x="138" y="15" width="27" height="43" rx="12" fill="#f2d7b6" transform="rotate(10 152 36)"/><circle cx="90" cy="73" r="20" fill="#627c98"/><path d="m90 59 4 9 10 1-8 7 2 10-8-5-8 5 2-10-8-7 10-1z" fill="#ffe0a1"/></svg>
+      <div class="pilot-display">
+        <small id="route-label">OUR DESTINATION</small>
+        <div class="pilot-route"><strong id="destination-name">Earth</strong><div class="journey-track" aria-hidden="true"><span id="journey-progress"></span></div></div>
+        <button class="pilot-button pilot-replay" id="pilot-replay" hidden>↻ Fly again</button>
+      </div>
+    </div>
+  </dialog>
+  <script>
+    'use strict';
+    const universe = document.getElementById('universe');
+    const rocket = document.getElementById('rocket');
+    const greeting = document.getElementById('greeting');
+    const soundButton = document.getElementById('sound');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let soundOn = true, audioContext, masterGain, engine, flightFrame, flightId = 0;
+    let volume = .9;
+    let position = null, currentAngle = 18;
+    let selectedPlanet = document.querySelector('.earth');
+    // A stable star field keeps the background calm, with no flashing.
+    let seed = 42;
+    const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (let i = 0; i < 65; i++) {
+      const star = document.createElement('span');
+      const cross = i % 9 === 0;
+      star.className = cross ? 'star cross' : 'star';
+      star.setAttribute('aria-hidden', 'true');
+      star.style.left = random() * 98 + '%';
+      star.style.top = 8 + random() * 87 + '%';
+      const size = 2 + random() * 2;
+      star.style.width = star.style.height = size + 'px';
+      star.style.opacity = .18 + random() * .4;
+      if (cross) star.textContent = '✦';
+      universe.prepend(star);
+    }
+    function chime(notes) {
+      if (!soundOn || !audioContext || audioContext.state !== 'running') return;
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const start = audioContext.currentTime + index * .17;
+        oscillator.type = 'sine'; oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(.13, start + .025);
+        gain.gain.exponentialRampToValueAtTime(.001, start + .45);
+        oscillator.connect(gain); gain.connect(masterGain);
+        oscillator.start(start); oscillator.stop(start + .5);
+        oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      });
+    }
+    function syncSoundControls() {
+      soundButton.setAttribute('aria-pressed', String(soundOn));
+      soundButton.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
+      document.getElementById('pilot-sound').setAttribute('aria-pressed', String(soundOn));
+      document.getElementById('pilot-sound').setAttribute('aria-label', soundOn ? 'Turn cockpit sound off' : 'Turn cockpit sound on');
+      document.getElementById('pilot-sound').textContent = soundOn ? '♪ Sound on' : '♪ Sound off';
+      document.getElementById('sound-mark').setAttribute('d', soundOn ? 'M15 8q5 4 0 8M18 5q7 7 0 14' : 'M16 9l6 6m0-6l-6 6');
+      if (masterGain) masterGain.gain.setTargetAtTime(soundOn ? volume : 0, audioContext.currentTime, .04);
+    }
+    async function activateAudio() {
+      if (!soundOn) return;
+      try {
+        if (!audioContext) {
+          const AudioEngine = window.AudioContext || window.webkitAudioContext;
+          audioContext = new AudioEngine();
+          masterGain = audioContext.createGain();
+          masterGain.gain.value = volume;
+          const compressor = audioContext.createDynamicsCompressor();
+          compressor.threshold.value = -12; compressor.knee.value = 18;
+          compressor.ratio.value = 4; compressor.attack.value = .01; compressor.release.value = .2;
+          masterGain.connect(compressor); compressor.connect(audioContext.destination);
+        }
+        await audioContext.resume();
+        syncSoundControls();
+        updateEngineState();
+      } catch { soundOn = false; syncSoundControls(); }
+    }
+    function stopEngine() {
+      if (!engine) return;
+      const retiring = engine;
+      engine = null;
+      const now = audioContext.currentTime;
+      retiring.gain.gain.cancelScheduledValues(now);
+      retiring.gain.gain.setTargetAtTime(0, now, .08);
+      retiring.noise.stop(now + .4);
+      retiring.hum.stop(now + .4);
+      retiring.whine.stop(now + .4);
+      retiring.hum.onended = () => retiring.nodes.forEach(node => node.disconnect());
+    }
+    function updateEngineState() {
+      if (!soundOn || !cockpit.open || pilotArrived || document.hidden) { stopEngine(); return; }
+      if (engine || !audioContext || audioContext.state !== 'running') return;
+      // Stronger filtered thrust, a low rumble and a rising turbine tone.
+      const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer; noise.loop = true;
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = 1200; filter.Q.value = .5;
+      const hum = audioContext.createOscillator();
+      hum.type = 'triangle'; hum.frequency.setValueAtTime(85, audioContext.currentTime);
+      hum.frequency.linearRampToValueAtTime(125, audioContext.currentTime + 1);
+      const humGain = audioContext.createGain(); humGain.gain.value = .32;
+      const whine = audioContext.createOscillator();
+      whine.type = 'sine'; whine.frequency.setValueAtTime(180, audioContext.currentTime);
+      whine.frequency.linearRampToValueAtTime(310, audioContext.currentTime + 2);
+      const whineGain = audioContext.createGain(); whineGain.gain.value = .09;
+      const gain = audioContext.createGain();
+      gain.gain.setValueAtTime(0, audioContext.currentTime);
+      gain.gain.linearRampToValueAtTime(.95, audioContext.currentTime + .65);
+      noise.connect(filter); filter.connect(gain);
+      hum.connect(humGain); humGain.connect(gain); gain.connect(masterGain);
+      whine.connect(whineGain); whineGain.connect(gain);
+      engine = { noise, hum, whine, gain, nodes: [noise, filter, hum, humGain, whine, whineGain, gain] };
+      noise.start(); hum.start(); whine.start();
+    }
+    soundButton.addEventListener('click', async () => {
+      soundOn = !soundOn;
+      syncSoundControls();
+      if (soundOn) { await activateAudio(); chime([392, 523]); }
+      else stopEngine();
+    });
+    document.getElementById('volume').addEventListener('input', event => {
+      volume = Number(event.target.value) / 100;
+      syncSoundControls();
+    });
+    const fullscreenButton = document.getElementById('fullscreen');
+    if (!document.fullscreenEnabled) fullscreenButton.hidden = true;
+    fullscreenButton.addEventListener('click', async () => {
+      try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+      catch { greeting.textContent = 'Tap a planet. Off we go!'; }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      fullscreenButton.setAttribute('aria-label', document.fullscreenElement ? 'Exit full screen' : 'Enter full screen');
+    });
+    function celebrate(x, y, colour) {
+      universe.querySelectorAll('.spark').forEach(spark => spark.remove());
+      for (let i = 0; i < (reducedMotion.matches ? 3 : 12); i++) {
+        const spark = document.createElement('span');
+        const angle = i * Math.PI / 6;
+        spark.className = 'spark'; spark.textContent = i % 2 ? '✦' : '·';
+        spark.setAttribute('aria-hidden', 'true');
+        Object.assign(spark.style, { left: x + 'px', top: y + 'px', color: colour });
+        spark.style.setProperty('--dx', Math.cos(angle) * 100 + 'px');
+        spark.style.setProperty('--dy', Math.sin(angle) * 85 + 'px');
+        universe.append(spark);
+        spark.addEventListener('animationend', () => spark.remove(), { once: true });
+      }
+    }
+    function draw(x, y, angle) {
+      position = { x, y }; currentAngle = angle;
+      rocket.style.left = x + 'px'; rocket.style.top = y + 'px';
+      rocket.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+    }
+    function fly(planet) {
+      selectedPlanet = planet;
+      cancelAnimationFrame(flightFrame);
+      const id = ++flightId;
+      const bounds = universe.getBoundingClientRect();
+      const target = planet.getBoundingClientRect();
+      const rocketBounds = rocket.getBoundingClientRect();
+      const start = position || { x: rocketBounds.left + rocketBounds.width / 2 - bounds.left, y: rocketBounds.top + rocketBounds.height / 2 - bounds.top };
+      const end = { x: target.left + target.width / 2 - bounds.left, y: target.top + target.height * .06 - bounds.top };
+      const control = { x: (start.x + end.x) / 2, y: Math.max(95, Math.min(start.y, end.y) - 105) };
+      const startAngle = currentAngle;
+      const name = planet.dataset.planet;
+      greeting.textContent = 'Off to ' + name + '!';
+      chime([262, 330, 392]);
+      const duration = reducedMotion.matches ? 250 : 2200;
+      const begin = performance.now();
+      function frame(now) {
+        if (id !== flightId) return;
+        const progress = Math.min(1, (now - begin) / duration);
+        const t = progress * progress * (3 - 2 * progress);
+        const x = (1-t)**2 * start.x + 2*(1-t)*t*control.x + t*t*end.x;
+        const y = (1-t)**2 * start.y + 2*(1-t)*t*control.y + t*t*end.y;
+        const dx = 2*(1-t)*(control.x-start.x) + 2*t*(end.x-control.x);
+        const dy = 2*(1-t)*(control.y-start.y) + 2*t*(end.y-control.y);
+        const heading = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+        const delta = ((heading - startAngle + 540) % 360) - 180;
+        const bank = Math.sin(Math.PI * progress);
+        draw(x, y, reducedMotion.matches ? 18 : (startAngle + delta * Math.min(1, progress * 5)) * bank + 18 * (1-bank));
+        if (progress < 1) flightFrame = requestAnimationFrame(frame);
+        else {
+          greeting.textContent = 'Hello, ' + name + '! ✦';
+          celebrate(end.x, end.y + 25, getComputedStyle(planet).color);
+          chime([392, 494, 587, 784]);
+        }
+      }
+      flightFrame = requestAnimationFrame(frame);
+    }
+    const cockpit = document.getElementById('cockpit');
+    const windscreen = document.getElementById('windscreen');
+    const pilotCanvas = document.getElementById('pilot-stars');
+    const pilotContext = pilotCanvas.getContext('2d');
+    const destination = document.getElementById('destination');
+    const pilotStatus = document.getElementById('pilot-status');
+    const replayButton = document.getElementById('pilot-replay');
+    const surface = document.getElementById('surface');
+    const spaceView = document.getElementById('space-view');
+    const skyPlanets = document.getElementById('sky-planets');
+    const viewToggle = document.getElementById('view-toggle');
+    let currentPlanet = null, journeyOrigin = null, outwardView = false;
+    let meteorElapsed = 0, nextMeteor = 1, shootingStar = null;
+    // Friendly illustrations: colours follow natural-light appearances; sizes and sky positions are imaginative.
+    const horizons = {
+      Earth: { ground: 'linear-gradient(165deg, #527c58, #21485d 48%, #102b44)', rim: '#b9e6ed', glow: '#7bcce955' },
+      Mars: { ground: 'linear-gradient(165deg, #bd7953, #914831 48%, #482d2b)', rim: '#e3a47d', glow: '#d2814933' },
+      Saturn: { ground: 'repeating-linear-gradient(174deg, #cfb480 0%, #eed9a4 12%, #bba27e 22%)', rim: '#f3e4bd', glow: '#e3c88a55' },
+      Neptune: { ground: 'repeating-linear-gradient(174deg, #78aeb9 0%, #9ecbd0 15%, #648f9f 27%)', rim: '#c3e6e7', glow: '#8fcbd355' }
+    };
+    function showPlanetView(lookOut) {
+      if (!pilotArrived || !currentPlanet) return;
+      const leavingSurface = document.activeElement === surface;
+      outwardView = lookOut;
+      windscreen.classList.toggle('outward', lookOut);
+      spaceView.hidden = !lookOut;
+      spaceView.classList.toggle('revealing', lookOut);
+      surface.setAttribute('aria-hidden', String(lookOut));
+      surface.disabled = lookOut;
+      if (lookOut && leavingSurface) viewToggle.focus({ preventScroll: true });
+      viewToggle.textContent = lookOut ? 'Look at planet ↓' : 'Look into space ↑';
+      viewToggle.setAttribute('aria-label', lookOut ? 'Look at ' + currentPlanet.dataset.planet : 'Look into space from ' + currentPlanet.dataset.planet);
+      pilotStatus.textContent = lookOut ? 'Space from ' + currentPlanet.dataset.planet + '! Tap a planet to fly.' : landingScenes[currentPlanet.dataset.planet].greeting + ' Touch the planet to look into space.';
+    }
+    function prepareSpaceView() {
+      skyPlanets.replaceChildren();
+      const name = currentPlanet.dataset.planet;
+      const horizon = document.getElementById('planet-horizon');
+      for (const [property, value] of Object.entries(horizons[name])) horizon.style.setProperty('--' + property, value);
+      skyPlanets.setAttribute('aria-label', 'Other planets seen from ' + name + '. Choose one to fly there.');
+      document.querySelectorAll('.planet').forEach(planet => {
+        if (planet === currentPlanet) return;
+        const button = document.createElement('button');
+        button.className = 'sky-planet';
+        button.dataset.planet = planet.dataset.planet;
+        button.setAttribute('aria-label', 'Fly from ' + name + ' to ' + planet.dataset.planet);
+        const label = document.createElement('span'); label.textContent = planet.dataset.planet;
+        button.append(copyPlanetPicture(planet, 'sky-'), label);
+        button.addEventListener('click', () => chooseDestination(planet));
+        skyPlanets.append(button);
+      });
+      shootingStar = null; meteorElapsed = 0; nextMeteor = 1;
+    }
+    function paintShootingStars(seconds) {
+      if (!pilotContext || reducedMotion.matches) return;
+      meteorElapsed += seconds;
+      if (!shootingStar && meteorElapsed >= nextMeteor) {
+        shootingStar = { x: pilotWidth * (.1 + random() * .45), y: pilotHeight * (.08 + random() * .2), age: 0 };
+        meteorElapsed = 0; nextMeteor = 3 + random() * 4;
+      }
+      if (!shootingStar) return;
+      shootingStar.age += seconds;
+      const t = shootingStar.age / 1.35;
+      if (t >= 1) { shootingStar = null; return; }
+      const dx = pilotWidth * .4, dy = pilotHeight * .3;
+      const x = shootingStar.x + dx * t, y = shootingStar.y + dy * t;
+      const tailX = x - dx * .22, tailY = y - dy * .22;
+      const trail = pilotContext.createLinearGradient(tailX, tailY, x, y);
+      trail.addColorStop(0, 'transparent'); trail.addColorStop(1, '#e1f6ff');
+      pilotContext.globalAlpha = Math.sin(Math.PI * t);
+      pilotContext.strokeStyle = trail; pilotContext.lineWidth = 2.5;
+      pilotContext.beginPath(); pilotContext.moveTo(tailX, tailY); pilotContext.lineTo(x, y); pilotContext.stroke();
+      pilotContext.fillStyle = '#fff6d9';
+      pilotContext.beginPath(); pilotContext.arc(x, y, 2.5, 0, Math.PI * 2); pilotContext.fill();
+      pilotContext.globalAlpha = 1;
+    }
+    // Saturn and Neptune have no solid surface; visit their cloud tops instead.
+    const landingScenes = {
+      Earth: {
+        description: 'Earth: green hills, a blue river, trees and flowers beneath a sunny sky.',
+        greeting: 'Touchdown on Earth! Hello, green hills! 🌼',
+        art: `<rect width="1000" height="600" fill="#a5dce5"/>
+          <circle cx="720" cy="120" r="53" fill="#ffe5a1"/>
+          <g fill="#f4fbf4" opacity=".9"><path d="M100 150q-10-30 25-32 10-48 52-20 37-15 45 23 41 0 33 29z"/><path d="M430 100q-8-28 23-28 16-36 44-12 35-11 40 23 31-3 36 17z"/></g>
+          <path d="M0 350 180 160 310 295 490 145 705 335 840 230 1000 350V600H0" fill="#7caeac"/>
+          <path d="m416 217 74-72 85 77-56-16-29-25-30 38zM139 202l41-42 54 58-40-14-17-13-17 17z" fill="#e0eee2"/>
+          <path d="M0 357Q200 260 440 349T1000 315V600H0" fill="#7bb878"/>
+          <path d="M0 420Q240 337 490 406T1000 370V600H0" fill="#a5ce86"/>
+          <path d="M520 359q-130 73 24 107t-54 134h185q109-102-100-148t-29-93" fill="#78c4d8"/>
+          <path d="M518 452q30 10 61 10M575 528q23 12 50 7" stroke="#c6edf0" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <g stroke="#6e8a57" stroke-width="13" stroke-linecap="round"><path d="M240 417v-85M748 459v-92"/></g>
+          <g fill="#4d956c"><circle cx="238" cy="305" r="51"/><circle cx="206" cy="334" r="34"/><circle cx="275" cy="330" r="36"/><circle cx="749" cy="347" r="46"/><circle cx="722" cy="369" r="35"/><circle cx="780" cy="374" r="32"/></g>
+          <g fill="#fff4c3"><circle cx="365" cy="480" r="9"/><circle cx="399" cy="507" r="7"/><circle cx="689" cy="530" r="9"/><circle cx="820" cy="478" r="8"/></g>
+          <g fill="#eeb185"><circle cx="365" cy="480" r="3"/><circle cx="399" cy="507" r="3"/><circle cx="689" cy="530" r="3"/><circle cx="820" cy="478" r="3"/></g>`
+      },
+      Mars: {
+        description: 'Mars: rusty red dunes, tall rocky mesas, craters and a little exploration rover.',
+        greeting: 'Touchdown on Mars! Look at the red rocks! ✦',
+        art: `<rect width="1000" height="600" fill="#e9b598"/>
+          <circle cx="700" cy="115" r="33" fill="#ffe0b0"/><circle cx="280" cy="90" r="13" fill="#c78f79"/>
+          <path d="M0 365 110 325 165 200H295l48 129 89 18 52-169h139l70 169 90-12 82-122h82l53 150V600H0" fill="#b87968"/>
+          <path d="m484 178-18 62h174l-17-62zM165 200l-16 39h160l-14-39z" fill="#d8977a"/>
+          <path d="M0 410Q200 299 466 381T1000 366V600H0" fill="#ce886c"/>
+          <path d="M0 463Q257 376 502 464T1000 403V600H0" fill="#e3a079"/>
+          <ellipse cx="335" cy="423" rx="90" ry="26" fill="#b47160"/><ellipse cx="335" cy="430" rx="68" ry="16" fill="#d48f70"/>
+          <ellipse cx="777" cy="490" rx="72" ry="21" fill="#bf7e65"/><ellipse cx="777" cy="496" rx="50" ry="12" fill="#dfa07c"/>
+          <g fill="#a96858"><path d="m141 498 21-29 35 4 19 29zM407 541l17-29 30-4 23 33zM848 392l16-28 33 8 9 24z"/></g>
+          <g transform="translate(548 424)"><ellipse cx="0" cy="51" rx="67" ry="12" fill="#bb7f68"/><path d="M-46 27h93" stroke="#686e79" stroke-width="9"/><g fill="#525e6b"><circle cx="-38" cy="38" r="14"/><circle cx="2" cy="40" r="14"/><circle cx="42" cy="38" r="14"/></g><rect x="-43" y="0" width="89" height="29" rx="10" fill="#f4e0bd"/><path d="M8 0v-30" stroke="#f4e0bd" stroke-width="8"/><rect x="-11" y="-42" width="41" height="23" rx="9" fill="#f4e0bd"/><circle cx="1" cy="-31" r="5" fill="#6d96a4"/><circle cx="18" cy="-31" r="5" fill="#6d96a4"/><path d="M-30 7h38" stroke="#c29877" stroke-width="4"/></g>`
+      },
+      Saturn: {
+        description: 'Saturn: floating above layers of golden clouds with wide glowing rings crossing the sky.',
+        greeting: 'Hello, Saturn! Floating above golden clouds! ☁',
+        art: `<rect width="1000" height="600" fill="#cba87f"/>
+          <path d="M-150 260Q480-90 1160 108" stroke="#f9dfac" stroke-width="72" fill="none"/>
+          <path d="M-150 260Q480-90 1160 108" stroke="#bda086" stroke-width="9" fill="none"/>
+          <path d="M-150 279Q480-71 1160 127" stroke="#ffedc5" stroke-width="12" fill="none"/>
+          <circle cx="650" cy="210" r="28" fill="#f8e4bd"/>
+          <path d="M0 327q70-62 150-5 68-90 147-20 68-88 148-7 90-90 173-6 85-75 162-3 114-60 220 33v281H0" fill="#e8c293"/>
+          <path d="M0 398q80-84 172-17 69-90 174-15 100-95 186-6 81-77 160-10 95-85 191-6 76-40 117-5v261H0" fill="#f3d6a4"/>
+          <path d="M0 472q90-66 190-13 108-72 205-8 102-65 208-12 84-86 188-17 98-51 209 4v174H0" fill="#ffe8b9"/>
+          <g fill="none" stroke="#d6af86" stroke-width="8" stroke-linecap="round" opacity=".65"><path d="M264 348q53-19 102 1M536 414q50-28 100-5M733 316q37-19 77 0M166 501q43-14 80-2"/></g>
+          <g fill="#fff5d4"><circle cx="386" cy="190" r="3"/><circle cx="811" cy="171" r="4"/><circle cx="512" cy="237" r="3"/></g>`
+      },
+      Neptune: {
+        description: 'Neptune: pale blue-green cloud tops, white wisps and a darker swirling storm beneath a distant moon.',
+        greeting: 'Hello, Neptune! So many blue clouds! ☁',
+        art: `<rect width="1000" height="600" fill="#648b9e"/>
+          <circle cx="710" cy="104" r="33" fill="#b9d0e5"/><circle cx="720" cy="96" r="9" fill="#9fb8d7"/>
+          <g fill="#d4e7fa"><circle cx="265" cy="104" r="3"/><circle cx="416" cy="162" r="3"/><circle cx="598" cy="78" r="3"/><circle cx="820" cy="191" r="3"/></g>
+          <path d="M0 296q145-74 300 0t330 8 370-35v331H0" fill="#80b2be"/>
+          <path d="M0 375q160-68 340 1t330-7 330 11v220H0" fill="#95c2c9"/>
+          <path d="M0 470q170-94 365-10t345-13 290 10v143H0" fill="#afd5d6"/>
+          <ellipse cx="495" cy="365" rx="153" ry="59" fill="#6395a4"/>
+          <ellipse cx="495" cy="365" rx="110" ry="36" fill="#497c90"/>
+          <path d="M358 366c-1-74 285-64 279 5-5 52-221 62-223 5-1-32 139-35 143-9 3 16-53 25-66 11" fill="none" stroke="#c5e2e1" stroke-width="9" stroke-linecap="round"/>
+          <g fill="none" stroke="#c3e3ea" stroke-width="10" stroke-linecap="round" opacity=".8"><path d="M80 322q97-37 188-2M721 410q98-37 193-6M201 503q93-22 169 3M580 516q85-18 158-2"/></g>`
+      }
+    };
+    let pilotFrame, pilotElapsed = 0, pilotPreviousTime = 0, pilotArrived = false;
+    let pilotWidth = 0, pilotHeight = 0;
+    const passingStars = Array.from({ length: 240 }, () => ({
+      x: (random() - .5) * 1.8, y: (random() - .5) * 1.8,
+      z: .12 + random() * 1.6, size: .9 + random() * 1.5
+    }));
+    function paintPilotStars(seconds, speed) {
+      if (!pilotContext) return;
+      pilotContext.clearRect(0, 0, pilotWidth, pilotHeight);
+      const centreX = pilotWidth / 2, centreY = pilotHeight * .46;
+      const spread = Math.max(pilotWidth, pilotHeight) * .48;
+      passingStars.forEach(star => {
+        star.z -= seconds * speed;
+        if (star.z < .12) star.z += 1.6;
+        const x = centreX + star.x * spread / star.z;
+        const y = centreY + star.y * spread / star.z;
+        const oldZ = star.z + (reducedMotion.matches ? 0 : speed * .16);
+        const tailX = centreX + star.x * spread / oldZ;
+        const tailY = centreY + star.y * spread / oldZ;
+        pilotContext.globalAlpha = Math.min(.95, Math.max(0, (1.72 - star.z) * 2));
+        pilotContext.strokeStyle = '#d2e4ff';
+        pilotContext.lineWidth = Math.min(2.5, star.size / star.z);
+        pilotContext.lineCap = 'round';
+        pilotContext.beginPath(); pilotContext.moveTo(tailX, tailY); pilotContext.lineTo(x, y); pilotContext.stroke();
+        pilotContext.fillStyle = '#fff0ce';
+        pilotContext.beginPath(); pilotContext.arc(x, y, Math.min(2.3, star.size / star.z), 0, Math.PI * 2); pilotContext.fill();
+      });
+      pilotContext.globalAlpha = 1;
+    }
+    function resizePilotView() {
+      if (!cockpit.open) return;
+      pilotWidth = windscreen.clientWidth; pilotHeight = windscreen.clientHeight;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      pilotCanvas.width = Math.round(pilotWidth * ratio);
+      pilotCanvas.height = Math.round(pilotHeight * ratio);
+      if (pilotContext) pilotContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+      paintPilotStars(0, 0);
+    }
+    function parkRocket() {
+      const bounds = universe.getBoundingClientRect();
+      const target = selectedPlanet.getBoundingClientRect();
+      draw(target.left + target.width / 2 - bounds.left, target.top + target.height * .06 - bounds.top, 18);
+      greeting.textContent = 'Hello, ' + selectedPlanet.dataset.planet + '! ✦';
+    }
+    function pilotTick(now) {
+      if (!cockpit.open) return;
+      const seconds = document.hidden ? 0 : Math.min(.05, Math.max(0, (now - pilotPreviousTime) / 1000));
+      pilotPreviousTime = now;
+      if (pilotArrived) {
+        if (outwardView) {
+          paintPilotStars(seconds, 0);
+          paintShootingStars(seconds);
+        }
+        pilotFrame = requestAnimationFrame(pilotTick);
+        return;
+      }
+      if (!document.hidden) pilotElapsed += seconds;
+      const progress = Math.min(1, pilotElapsed / (reducedMotion.matches ? 3 : 8));
+      // Stars spread away from the destination, creating a forward view with no camera shake.
+      const acceleration = Math.min(1, .45 + progress * 5);
+      const braking = Math.min(1, (1 - progress) * 5);
+      const speed = reducedMotion.matches || document.hidden ? 0 : .62 * acceleration * braking;
+      paintPilotStars(seconds, speed);
+      const scale = reducedMotion.matches ? 1 : .14 + .86 * Math.pow(progress, 1.6);
+      destination.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      document.getElementById('journey-progress').style.width = progress * 100 + '%';
+      if (progress < 1) pilotFrame = requestAnimationFrame(pilotTick);
+      else {
+        pilotArrived = true;
+        currentPlanet = selectedPlanet;
+        stopEngine();
+        pilotStatus.textContent = landingScenes[selectedPlanet.dataset.planet].greeting + ' Touch the planet to look into space.';
+        windscreen.classList.add('landed');
+        surface.setAttribute('aria-hidden', 'false');
+        surface.disabled = false;
+        replayButton.hidden = false;
+        viewToggle.hidden = false;
+        viewToggle.textContent = 'Look into space ↑';
+        viewToggle.setAttribute('aria-label', 'Look into space from ' + currentPlanet.dataset.planet);
+        document.getElementById('route-label').textContent = 'EXPLORING FROM';
+        prepareSpaceView();
+        parkRocket();
+        chime([392, 494, 587, 784]);
+        pilotFrame = requestAnimationFrame(pilotTick);
+      }
+    }
+    function startPilotJourney() {
+      cancelAnimationFrame(pilotFrame);
+      cancelAnimationFrame(flightFrame); flightId++;
+      journeyOrigin = currentPlanet;
+      pilotElapsed = 0; pilotArrived = false; outwardView = false;
+      replayButton.hidden = true;
+      viewToggle.hidden = true;
+      spaceView.hidden = true;
+      // Keep keyboard focus on a visible control when a sky planet starts a flight.
+      if (skyPlanets.contains(document.activeElement)) document.getElementById('leave-cockpit').focus({ preventScroll: true });
+      windscreen.classList.remove('landed', 'outward');
+      surface.setAttribute('aria-hidden', 'true');
+      surface.disabled = true;
+      const name = selectedPlanet.dataset.planet;
+      const scene = landingScenes[name];
+      surface.setAttribute('aria-label', scene.description + ' Touch to look into space from ' + name + '.');
+      surface.dataset.planet = name;
+      surface.innerHTML = '<svg viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">' + scene.art + '</svg>';
+      document.querySelectorAll('.destination-choice').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.planet === name));
+      });
+      document.getElementById('destination-name').textContent = name;
+      document.getElementById('route-label').textContent = journeyOrigin ? 'FROM ' + journeyOrigin.dataset.planet.toUpperCase() : 'OUR DESTINATION';
+      pilotStatus.textContent = journeyOrigin ? 'From ' + journeyOrigin.dataset.planet + ' to ' + name + '! Off we go!' : 'Off to ' + name + '! You’re the pilot!';
+      // Reuse each friendly planet, giving its SVG definitions distinct IDs.
+      const planetPicture = copyPlanetPicture(selectedPlanet, 'pilot-');
+      destination.replaceChildren(planetPicture);
+      destination.style.transform = `translate(-50%, -50%) scale(${reducedMotion.matches ? 1 : .14})`;
+      document.getElementById('journey-progress').style.width = '0%';
+      resizePilotView();
+      const departurePlanet = selectedPlanet;
+      activateAudio().then(() => {
+        if (cockpit.open && !pilotArrived && selectedPlanet === departurePlanet) chime([262, 330, 392]);
+      });
+      pilotPreviousTime = performance.now();
+      pilotFrame = requestAnimationFrame(pilotTick);
+    }
+    function copyPlanetPicture(planet, prefix) {
+      const planetPicture = planet.querySelector('svg').cloneNode(true);
+      planetPicture.querySelectorAll('[id]').forEach(node => {
+        const oldId = node.id, newId = prefix + oldId;
+        node.id = newId;
+        planetPicture.querySelectorAll('*').forEach(element => {
+          for (const attr of Array.from(element.attributes)) {
+            if (attr.value.includes('url(#' + oldId + ')')) {
+              element.setAttribute(attr.name, attr.value.replaceAll('url(#' + oldId + ')', 'url(#' + newId + ')'));
+            }
+          }
+        });
+      });
+      return planetPicture;
+    }
+    function chooseDestination(planet) {
+      // Repeated taps on the current destination shouldn't delay arrival.
+      if (cockpit.open && selectedPlanet === planet) {
+        if (pilotArrived) showPlanetView(true);
+        return;
+      }
+      selectedPlanet = planet;
+      if (!cockpit.open) {
+        cockpit.showModal();
+        if (pilotArrived && currentPlanet === planet) {
+          resizePilotView();
+          showPlanetView(outwardView);
+          pilotPreviousTime = performance.now();
+          pilotFrame = requestAnimationFrame(pilotTick);
+          return;
+        }
+      }
+      startPilotJourney();
+    }
+    rocket.addEventListener('click', () => chooseDestination(selectedPlanet));
+    document.getElementById('leave-cockpit').addEventListener('click', () => cockpit.close());
+    document.getElementById('pilot-sound').addEventListener('click', () => soundButton.click());
+    viewToggle.addEventListener('click', () => showPlanetView(!outwardView));
+    surface.addEventListener('click', () => showPlanetView(true));
+    replayButton.addEventListener('click', () => {
+      document.getElementById('leave-cockpit').focus({ preventScroll: true });
+      startPilotJourney();
+    });
+    cockpit.addEventListener('close', () => {
+      cancelAnimationFrame(pilotFrame);
+      stopEngine();
+      if (pilotArrived) parkRocket();
+      else fly(selectedPlanet);
+      rocket.focus({ preventScroll: true });
+    });
+    new ResizeObserver(resizePilotView).observe(windscreen);
+    document.querySelectorAll('.planet').forEach(planet => {
+      planet.addEventListener('click', () => chooseDestination(planet));
+      const choice = document.createElement('button');
+      choice.className = 'destination-choice';
+      choice.dataset.planet = planet.dataset.planet;
+      choice.setAttribute('aria-label', 'Fly to ' + planet.dataset.planet);
+      choice.setAttribute('aria-pressed', 'false');
+      const label = document.createElement('span');
+      label.textContent = planet.dataset.planet;
+      choice.append(copyPlanetPicture(planet, 'choice-'), label);
+      choice.addEventListener('click', () => chooseDestination(planet));
+      document.getElementById('destinations').append(choice);
+    });
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(flightFrame); flightId++;
+      position = null; currentAngle = 18;
+      rocket.style.left = ''; rocket.style.top = ''; rocket.style.transform = '';
+      if (!cockpit.open) greeting.textContent = 'Tap a planet. Off we go!';
+      else resizePilotView();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && audioContext) { stopEngine(); audioContext.suspend().catch(() => {}); }
+      else if (soundOn && audioContext) activateAudio();
+    });
+  </script>
+</body>
+</html>
